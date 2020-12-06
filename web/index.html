@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+	<title>PrivTracker - Private BitTorrent tracker for everyone</title>
+	<script>
+		function makeRoom(length) {
+			var roomID = '';
+			var characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+			var charactersLength = characters.length;
+			for (var i = 0; i < length; i++) {
+				roomID += characters.charAt(Math.floor(Math.random() * charactersLength));
+			}
+			var urls = document.getElementsByClassName('url');
+			for (var i = 0; i < urls.length; i++) {
+				urls[i].innerText = urls[i].innerText.replace('{{room}}', roomID);
+			}
+
+			document.getElementById('hidden').style.display = 'block';
+		}
+		function copyToClipboard() {
+			navigator.clipboard.writeText(document.getElementsByClassName('url')[0].innerText);
+		}
+	</script>
+</head>
+
+<body>
+	<div>
+		<h1>PrivTracker</h1>
+		<h2>Private BitTorrent tracker for everyone</h2>
+		<p>
+			PrivTracker allows to share torrent files just with your fiends, nobody else.
+			Unlike public trackers, it shares peers only within a group which is using the same Announce URL.
+			It really works like a private tracker, but can be generated with one click of a button.
+		</p>
+
+		<button onclick="makeRoom(16)">I'm in. Generate private tracker for me</button>
+
+		<div id="hidden" style="display:none">
+			<h3>Your announce URL:</h3>
+			<code class="url">https://privtracker.tk/{{room}}/announce</code>
+			<button onclick="copyToClipboard()">Copy to clipboard</button>
+		</div>
+		<div>
+			
+		</div>
+		<h2>How to create private torrent?</h2>
+		<h3>Using <a href="https://transmissionbt.com/" target="_blank">transmission</a>:</h3>
+		<ul>
+			<li>File &rarr; new</li>
+			<li>Select where to save generated torrent</li>
+			<li>Select file to share</li>
+			<li>In <b>Trackers</b> field enter <code class="url">https://privtracker.tk/{{room}}/announce</code></li>
+			<li>Select <b>Private torrent</b></li>
+			<li>Click <b>New</b></li>
+			<li>Wait a moment and click <b>Add</b> in next window</li>
+			<li>Click <b>Open</b> to start seeding</li>
+			<li>Done. Now you can send torrent file to your friends...</li>
+		</ul>
+		<img src="new_torrent.png" alt="New Torrent screenshot">
+	</div>
+</body>
+
+</html>
