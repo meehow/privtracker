@@ -96,28 +96,44 @@ func GetPeers(room, infoHash string, numWant uint, seeding bool) (peersv4, peers
 	shard := shards[shardIndex(h)]
 	shard.RLock()
 	if seeding {
-		peersv4, peersv6 = getPeersFromSwarm(numWant, shard.swarms[h].leechers)
+		for serialized := range shard.swarms[h].leechers {
+			if numWant == 0 {
+				break
+			}
+			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
+				peersv4 = append(peersv4, serialized[12:]...)
+			} else {
+				peersv6 = append(peersv6, serialized...)
+			}
+			numWant--
+		}
 	} else {
-		peersv4, peersv6 = getPeersFromSwarm(numWant, shard.swarms[h].seeders)
+		for serialized := range shard.swarms[h].seeders {
+			if numWant == 0 {
+				break
+			}
+			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
+				peersv4 = append(peersv4, serialized[12:]...)
+			} else {
+				peersv6 = append(peersv6, serialized...)
+			}
+			numWant--
+		}
+		for serialized := range shard.swarms[h].leechers {
+			if numWant == 0 {
+				break
+			}
+			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
+				peersv4 = append(peersv4, serialized[12:]...)
+			} else {
+				peersv6 = append(peersv6, serialized...)
+			}
+			numWant--
+		}
 	}
 	numSeeders = len(shard.swarms[h].seeders)
 	numLeechers = len(shard.swarms[h].leechers)
 	shard.RUnlock()
-	return
-}
-
-func getPeersFromSwarm(numWant uint, peers map[serializedPeer]int64) (peersv4, peersv6 []byte) {
-	for serialized := range peers {
-		if numWant == 0 {
-			break
-		}
-		if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
-			peersv4 = append(peersv4, serialized[12:]...)
-		} else {
-			peersv6 = append(peersv6, serialized...)
-		}
-		numWant--
-	}
 	return
 }
 
