@@ -43,7 +43,7 @@ func serialize(ip string, port uint16) serializedPeer {
 	return serializedPeer(append(net.ParseIP(ip), byte(port>>8), byte(port)))
 }
 
-func PutPeer(room, infoHash string, ip string, port uint16, seeding bool) {
+func PutPeer(room, infoHash, ip string, port uint16, seeding bool) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.Lock()
@@ -53,29 +53,29 @@ func PutPeer(room, infoHash string, ip string, port uint16, seeding bool) {
 			leechers: make(map[serializedPeer]int64),
 		}
 	}
-	serialized := serialize(ip, port)
+	client := serialize(ip, port)
 	if seeding {
-		shard.swarms[h].seeders[serialized] = time.Now().Unix()
+		shard.swarms[h].seeders[client] = time.Now().Unix()
 	} else {
-		shard.swarms[h].leechers[serialized] = time.Now().Unix()
+		shard.swarms[h].leechers[client] = time.Now().Unix()
 	}
 	shard.Unlock()
 }
 
-func DeletePeer(room, infoHash string, ip string, port uint16) {
+func DeletePeer(room, infoHash, ip string, port uint16) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.Lock()
 	if _, ok := shard.swarms[h]; !ok {
 		return
 	}
-	serialized := serialize(ip, port)
-	delete(shard.swarms[h].seeders, serialized)
-	delete(shard.swarms[h].leechers, serialized)
+	client := serialize(ip, port)
+	delete(shard.swarms[h].seeders, client)
+	delete(shard.swarms[h].leechers, client)
 	shard.Unlock()
 }
 
-func GraduateLeecher(room, infoHash string, ip string, port uint16) {
+func GraduateLeecher(room, infoHash, ip string, port uint16) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.Lock()
@@ -85,38 +85,42 @@ func GraduateLeecher(room, infoHash string, ip string, port uint16) {
 			leechers: make(map[serializedPeer]int64),
 		}
 	}
-	serialized := serialize(ip, port)
-	shard.swarms[h].seeders[serialized] = time.Now().Unix()
-	delete(shard.swarms[h].leechers, serialized)
+	client := serialize(ip, port)
+	shard.swarms[h].seeders[client] = time.Now().Unix()
+	delete(shard.swarms[h].leechers, client)
 	shard.Unlock()
 }
 
-func GetPeers(room, infoHash string, numWant uint, seeding bool) (peersv4, peersv6 []byte, numSeeders, numLeechers int) {
+func GetPeers(room, infoHash, ip string, port uint16, seeding bool, numWant uint) (peersv4, peersv6 []byte, numSeeders, numLeechers int) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.RLock()
+	client := serialize(ip, port)
 	// seeders don't need other seeders
 	if !seeding {
-		for serialized := range shard.swarms[h].seeders {
+		for peer := range shard.swarms[h].seeders {
 			if numWant == 0 {
 				break
 			}
-			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
-				peersv4 = append(peersv4, serialized[12:]...)
+			if bytes.HasPrefix([]byte(peer), v4InV6Prefix) {
+				peersv4 = append(peersv4, peer[12:]...)
 			} else {
-				peersv6 = append(peersv6, serialized...)
+				peersv6 = append(peersv6, peer...)
 			}
 			numWant--
 		}
 	}
-	for serialized := range shard.swarms[h].leechers {
+	for peer := range shard.swarms[h].leechers {
+		if peer == client {
+			continue
+		}
 		if numWant == 0 {
 			break
 		}
-		if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
-			peersv4 = append(peersv4, serialized[12:]...)
+		if bytes.HasPrefix([]byte(peer), v4InV6Prefix) {
+			peersv4 = append(peersv4, peer[12:]...)
 		} else {
-			peersv6 = append(peersv6, serialized...)
+			peersv6 = append(peersv6, peer...)
 		}
 		numWant--
 	}
