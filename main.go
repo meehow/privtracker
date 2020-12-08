@@ -57,7 +57,7 @@ func announce(c *gin.Context) {
 	default:
 		PutPeer(c.Param("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding())
 	}
-	peersv4, peersv6, numSeeders, numLeechers := GetPeers(c.Param("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding(), req.Numwant)
+	peersIPv4, peersIPv6, numSeeders, numLeechers := GetPeers(c.Param("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding(), req.Numwant)
 	interval := 120
 	if numSeeders == 0 {
 		interval /= 2
@@ -68,8 +68,8 @@ func announce(c *gin.Context) {
 		Interval:   interval,
 		Complete:   numSeeders,
 		Incomplete: numLeechers,
-		Peers:      string(peersv4),
-		PeersIPv6:  string(peersv6),
+		Peers:      string(peersIPv4),
+		PeersIPv6:  string(peersIPv6),
 	}
 	if err := bencode.Marshal(c.Writer, resp); err != nil {
 		c.Error(err)

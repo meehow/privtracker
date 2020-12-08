@@ -91,7 +91,7 @@ func GraduateLeecher(room, infoHash, ip string, port uint16) {
 	shard.Unlock()
 }
 
-func GetPeers(room, infoHash, ip string, port uint16, seeding bool, numWant uint) (peersv4, peersv6 []byte, numSeeders, numLeechers int) {
+func GetPeers(room, infoHash, ip string, port uint16, seeding bool, numWant uint) (peersIPv4, peersIPv6 []byte, numSeeders, numLeechers int) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.RLock()
@@ -103,9 +103,9 @@ func GetPeers(room, infoHash, ip string, port uint16, seeding bool, numWant uint
 				break
 			}
 			if bytes.HasPrefix([]byte(peer), v4InV6Prefix) {
-				peersv4 = append(peersv4, peer[12:]...)
+				peersIPv4 = append(peersIPv4, peer[12:]...)
 			} else {
-				peersv6 = append(peersv6, peer...)
+				peersIPv6 = append(peersIPv6, peer...)
 			}
 			numWant--
 		}
@@ -118,9 +118,9 @@ func GetPeers(room, infoHash, ip string, port uint16, seeding bool, numWant uint
 			break
 		}
 		if bytes.HasPrefix([]byte(peer), v4InV6Prefix) {
-			peersv4 = append(peersv4, peer[12:]...)
+			peersIPv4 = append(peersIPv4, peer[12:]...)
 		} else {
-			peersv6 = append(peersv6, peer...)
+			peersIPv6 = append(peersIPv6, peer...)
 		}
 		numWant--
 	}
