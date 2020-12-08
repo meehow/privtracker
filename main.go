@@ -36,8 +36,8 @@ type AnnounceResponse struct {
 	Interval   int    `bencode:"interval"`
 	Complete   int    `bencode:"complete"`
 	Incomplete int    `bencode:"incomplete"`
-	Peers      string `bencode:"peers"`
-	PeersIPv6  string `bencode:"peers_ipv6"`
+	Peers      []byte `bencode:"peers"`
+	PeersIPv6  []byte `bencode:"peers_ipv6"`
 }
 
 func announce(c *gin.Context) {
@@ -68,8 +68,8 @@ func announce(c *gin.Context) {
 		Interval:   interval,
 		Complete:   numSeeders,
 		Incomplete: numLeechers,
-		Peers:      string(peersIPv4),
-		PeersIPv6:  string(peersIPv6),
+		Peers:      peersIPv4,
+		PeersIPv6:  peersIPv6,
 	}
 	if err := bencode.Marshal(c.Writer, resp); err != nil {
 		c.Error(err)
