@@ -58,8 +58,14 @@ func announce(c *gin.Context) {
 		PutPeer(c.Param("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding())
 	}
 	peersv4, peersv6, numSeeders, numLeechers := GetPeers(c.Param("room"), req.InfoHash, req.Numwant, req.IsSeeding())
+	interval := 120
+	if numSeeders == 0 {
+		interval /= 2
+	} else if numLeechers == 0 {
+		interval *= 2
+	}
 	resp := AnnounceResponse{
-		Interval:   120,
+		Interval:   interval,
 		Complete:   numSeeders,
 		Incomplete: numLeechers,
 		Peers:      string(peersv4),
