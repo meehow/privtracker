@@ -95,19 +95,8 @@ func GetPeers(room, infoHash string, numWant uint, seeding bool) (peersv4, peers
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.RLock()
-	if seeding {
-		for serialized := range shard.swarms[h].leechers {
-			if numWant == 0 {
-				break
-			}
-			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
-				peersv4 = append(peersv4, serialized[12:]...)
-			} else {
-				peersv6 = append(peersv6, serialized...)
-			}
-			numWant--
-		}
-	} else {
+	// seeders don't need other seeders
+	if !seeding {
 		for serialized := range shard.swarms[h].seeders {
 			if numWant == 0 {
 				break
@@ -119,17 +108,17 @@ func GetPeers(room, infoHash string, numWant uint, seeding bool) (peersv4, peers
 			}
 			numWant--
 		}
-		for serialized := range shard.swarms[h].leechers {
-			if numWant == 0 {
-				break
-			}
-			if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
-				peersv4 = append(peersv4, serialized[12:]...)
-			} else {
-				peersv6 = append(peersv6, serialized...)
-			}
-			numWant--
+	}
+	for serialized := range shard.swarms[h].leechers {
+		if numWant == 0 {
+			break
 		}
+		if bytes.HasPrefix([]byte(serialized), v4InV6Prefix) {
+			peersv4 = append(peersv4, serialized[12:]...)
+		} else {
+			peersv6 = append(peersv6, serialized...)
+		}
+		numWant--
 	}
 	numSeeders = len(shard.swarms[h].seeders)
 	numLeechers = len(shard.swarms[h].leechers)
