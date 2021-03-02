@@ -1,4 +1,4 @@
-# [Private BitTorrent tracker for everyone](https://privtracker.tk/)
+# [Private BitTorrent tracker for everyone](https://privtracker.com/)
 
 PrivTracker allows to share torrent files just with your fiends, nobody else.
 Unlike public trackers, it shares peers only within a group which is using the same Announce URL.
