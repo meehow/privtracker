@@ -43,9 +43,7 @@ type AnnounceResponse struct {
 func announce(c *gin.Context) {
 	req := new(AnnounceRequest)
 	c.BindQuery(req)
-	// if req.IP == "" {
 	req.IP = c.ClientIP() // not sure if ip from request should be honored
-	// }
 	if req.Numwant == 0 {
 		req.Numwant = 30
 	}
