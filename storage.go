@@ -142,6 +142,7 @@ func GetStats(room, infoHash string) (numSeeders, numLeechers int) {
 
 func Cleanup() {
 	for {
+		time.Sleep(time.Minute * 3)
 		expiration := time.Now().Unix() - 600
 		for _, shard := range shards {
 			shard.Lock()
@@ -162,6 +163,5 @@ func Cleanup() {
 			}
 			shard.Unlock()
 		}
-		time.Sleep(time.Minute * 3)
 	}
 }
