@@ -34,7 +34,11 @@ func main() {
 	app.Use(myLogger())
 	app.Use(hsts)
 	app.Get("/", docs)
-	app.Static("/", "docs", fiber.Static{MaxAge: 3600 * 24 * 7})
+	app.Static("/", "docs", fiber.Static{
+		MaxAge:        3600 * 24 * 7,
+		Compress:      true,
+		CacheDuration: time.Hour,
+	})
 	app.Get("/dashboard", monitor.New())
 	app.Get("/:room/announce", announce)
 	app.Get("/:room/scrape", scrape)
