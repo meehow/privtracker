@@ -1,3 +1,4 @@
 privtracker
 config.json
 dist
+*.fiber.gz

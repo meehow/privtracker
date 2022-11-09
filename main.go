@@ -31,6 +31,7 @@ func main() {
 	}
 	app := fiber.New(config)
 	app.Use(recover.New())
+	// app.Use(pprof.New())
 	app.Use(myLogger())
 	app.Use(hsts)
 	app.Get("/", docs)

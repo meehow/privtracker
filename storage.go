@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"net"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -163,5 +164,6 @@ func Cleanup() {
 			}
 			shard.Unlock()
 		}
+		runtime.GC()
 	}
 }
