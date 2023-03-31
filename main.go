@@ -22,6 +22,7 @@ func main() {
 		ServerHeader: "privtracker",
 		ReadTimeout:  time.Second * 245,
 		WriteTimeout: time.Second * 15,
+		Network:      fiber.NetworkTCP,
 	}
 	domains, tls := os.LookupEnv("DOMAINS")
 	if !tls {
