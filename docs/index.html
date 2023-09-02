@@ -7,22 +7,26 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
 	<title>PrivTracker - Private BitTorrent tracker for everyone</title>
 	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			document.querySelectorAll(".url").forEach(url => {
+				url.innerText = url.innerText.replace('{{hostname}}', window.location.hostname);
+			})
+		})
 		function makeRoom(length) {
-			var roomID = '';
-			var characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-			var charactersLength = characters.length;
-			for (var i = 0; i < length; i++) {
+			let roomID = '';
+			const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+			const charactersLength = characters.length;
+			for (let i = 0; i < length; i++) {
 				roomID += characters.charAt(Math.floor(Math.random() * charactersLength));
 			}
-			var urls = document.getElementsByClassName('url');
-			for (var i = 0; i < urls.length; i++) {
-				urls[i].innerText = urls[i].innerText.replace('{{room}}', roomID);
-			}
+			document.querySelectorAll(".url").forEach(url => {
+				url.innerText = url.innerText.replace('{{room}}', roomID);
+			})
 
-			document.getElementById('hidden').style.display = 'block';
+			document.querySelector('#hidden').style.display = 'block';
 		}
 		function copyToClipboard() {
-			navigator.clipboard.writeText(document.getElementsByClassName('url')[0].innerText);
+			navigator.clipboard.writeText(document.querySelector('.url').innerText);
 		}
 	</script>
 </head>
@@ -44,7 +48,7 @@
 
 		<div id="hidden" style="display:none">
 			<h3>Your announce URL:</h3>
-			<code class="url">https://privtracker.com/{{room}}/announce</code>
+			<code class="url">https://{{hostname}}/{{room}}/announce</code>
 			<button onclick="copyToClipboard()">Copy to clipboard</button>
 			<p>(You can also use any random string as the Room ID. We don't store it anywhere.)</p>
 		</div>
@@ -56,7 +60,7 @@
 		<ul>
 			<li>File <b>&rarr;</b> New&hellip;</li>
 			<li>Select file to share</li>
-			<li>In <b>Trackers</b> field enter <code class="url">https://privtracker.com/{{room}}/announce</code></li>
+			<li>In <b>Trackers</b> field enter <code class="url">https://{{hostname}}/{{room}}/announce</code></li>
 			<li>Select <b>Private torrent</b></li>
 			<li>Click <b>New</b></li>
 			<li>Click <b>Add</b> in next window</li>
@@ -68,7 +72,8 @@
 		<ul>
 			<li>File <b>&rarr;</b> Create Torrent File&hellip;</li>
 			<li>Select file to share</li>
-			<li>Click <b>&plus;</b> under <b>Trackers</b> field and enter <code class="url">https://privtracker.com/{{room}}/announce</code></li>
+			<li>Click <b>&plus;</b> under <b>Trackers</b> field and enter <code
+					class="url">https://{{hostname}}/{{room}}/announce</code></li>
 			<li>Select <b>Private</b>
 			<li>Select <b>Open when created</b></li>
 			<li>Click <b>Create</b></li>
