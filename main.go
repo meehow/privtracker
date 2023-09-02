@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"golang.org/x/crypto/acme/autocert"
 )
+
+var envConfig = getEnvConfig()
 
 func main() {
 	go Cleanup()
@@ -30,6 +33,7 @@ func main() {
 		config.TrustedProxies = []string{"127.0.0.1"}
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
+
 	app := fiber.New(config)
 	app.Use(recover.New())
 	// app.Use(pprof.New())
@@ -50,12 +54,32 @@ func main() {
 		split := strings.Split(domains, ",")
 		log.Fatal(app.Listener(myListener(split...)))
 	} else {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "1337"
-		}
-		log.Fatal(app.Listen(":" + port))
+		log.Fatal(app.Listen(":" + envConfig.port))
 	}
+}
+
+type EnvConfig struct {
+	domain string
+	port   string
+}
+
+func getEnvConfig() EnvConfig {
+
+	config := EnvConfig{
+		domain: "privtracker.com",
+		port:   "1337",
+	}
+
+	port := os.Getenv("PORT")
+	domain := os.Getenv("DOMAIN")
+	if domain != "" {
+		config.domain = domain
+	}
+	if port != "" {
+		config.port = port
+	}
+
+	return config
 }
 
 func myListener(domains ...string) net.Listener {
@@ -98,7 +122,7 @@ func redirect80(config fiber.Config) {
 	config.DisableStartupMessage = true
 	app := fiber.New(config)
 	app.Use(func(c *fiber.Ctx) error {
-		return c.Redirect("https://privtracker.com/", fiber.StatusMovedPermanently)
+		return c.Redirect(fmt.Sprintf("https://%s/", envConfig.domain), fiber.StatusMovedPermanently)
 	})
 	log.Print(app.Listen(":80"))
 }
@@ -115,8 +139,8 @@ func hsts(c *fiber.Ctx) error {
 }
 
 func docs(c *fiber.Ctx) error {
-	if c.Hostname() != "privtracker.com" {
-		return c.Redirect("https://privtracker.com/", fiber.StatusMovedPermanently)
+	if c.Hostname() != envConfig.domain {
+		return c.Redirect(fmt.Sprintf("https://%s/", envConfig.domain), fiber.StatusMovedPermanently)
 	}
 	return c.Next()
 }
