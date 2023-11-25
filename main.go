@@ -2,21 +2,27 @@ package main
 
 import (
 	"crypto/tls"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"golang.org/x/crypto/acme/autocert"
 )
 
+//go:embed docs
+var embedDirStatic embed.FS
 var envConfig = getEnvConfig()
 
 func main() {
@@ -34,17 +40,21 @@ func main() {
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
 
+	docsRoot, err := fs.Sub(embedDirStatic, "docs")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	app := fiber.New(config)
 	app.Use(recover.New())
 	// app.Use(pprof.New())
 	app.Use(myLogger())
 	app.Use(hsts)
 	app.Get("/", docs)
-	app.Static("/", "docs", fiber.Static{
-		MaxAge:        3600 * 24 * 7,
-		Compress:      true,
-		CacheDuration: time.Hour,
-	})
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:   http.FS(docsRoot),
+		MaxAge: 3600 * 24 * 7,
+	}))
 	app.Get("/dashboard", monitor.New())
 	app.Get("/:room/announce", announce)
 	app.Get("/:room/scrape", scrape)
