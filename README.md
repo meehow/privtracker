@@ -52,3 +52,24 @@ ExecStart=/home/privtracker/web/privtracker
 [Install]
 WantedBy=multi-user.target
 ```
+
+### Docker Compose
+
+```yaml
+version: "3"
+services:
+    privtracker:
+        build: https://github.com/meehow/privtracker.git
+        restart: unless-stopped
+        user: 1000:1000
+        environment:
+            - TZ=${TZ}
+            - PORT=443
+        volumes:
+            - config:/config
+        ports:
+            - 443:443
+
+volumes:
+    config:
+```
