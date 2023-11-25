@@ -25,3 +25,22 @@ $ ./privtracker
 # Export PORT and DOMAIN variables to use custom values.
 $ export PORT=12345 DOMAIN=customprivtracker.com; ./privtracker
 ```
+### Docker Compose
+```yaml
+version: "3"
+services:
+    privtracker:
+        build: https://github.com/meehow/privtracker.git
+        restart: unless-stopped
+        user: 1000:1000
+        environment:
+            - TZ=${TZ}
+            - DOMAIN=customprivtracker.com
+        volumes:
+            - config:/config
+        ports:
+            - 1337:1337
+
+volumes:
+    config:
+```

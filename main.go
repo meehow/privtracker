@@ -2,21 +2,27 @@ package main
 
 import (
 	"crypto/tls"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"golang.org/x/crypto/acme/autocert"
 )
 
+//go:embed docs
+var embedDirStatic embed.FS
 var envConfig = getEnvConfig()
 
 func main() {
@@ -30,8 +36,13 @@ func main() {
 	domains, tls := os.LookupEnv("DOMAINS")
 	if !tls {
 		config.EnableTrustedProxyCheck = true
-		config.TrustedProxies = []string{"127.0.0.1"}
+		config.TrustedProxies = envConfig.trustedProxies
 		config.ProxyHeader = fiber.HeaderXForwardedFor
+	}
+
+	docsRoot, err := fs.Sub(embedDirStatic, "docs")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	app := fiber.New(config)
@@ -40,11 +51,10 @@ func main() {
 	app.Use(myLogger())
 	app.Use(hsts)
 	app.Get("/", docs)
-	app.Static("/", "docs", fiber.Static{
-		MaxAge:        3600 * 24 * 7,
-		Compress:      true,
-		CacheDuration: time.Hour,
-	})
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:   http.FS(docsRoot),
+		MaxAge: 3600 * 24 * 7,
+	}))
 	app.Get("/dashboard", monitor.New())
 	app.Get("/:room/announce", announce)
 	app.Get("/:room/scrape", scrape)
@@ -59,24 +69,30 @@ func main() {
 }
 
 type EnvConfig struct {
-	domain string
-	port   string
+	domain         string
+	port           string
+	trustedProxies []string
 }
 
 func getEnvConfig() EnvConfig {
 
 	config := EnvConfig{
-		domain: "privtracker.com",
-		port:   "1337",
+		domain:         "privtracker.com",
+		port:           "1337",
+		trustedProxies: []string{"127.0.0.1"},
 	}
 
 	port := os.Getenv("PORT")
 	domain := os.Getenv("DOMAIN")
+	trustedProxies := os.Getenv("TRUSTED_PROXIES")
 	if domain != "" {
 		config.domain = domain
 	}
 	if port != "" {
 		config.port = port
+	}
+	if trustedProxies != "" {
+		config.trustedProxies = strings.Split(trustedProxies, ",")
 	}
 
 	return config
