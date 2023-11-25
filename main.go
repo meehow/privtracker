@@ -30,7 +30,7 @@ func main() {
 	domains, tls := os.LookupEnv("DOMAINS")
 	if !tls {
 		config.EnableTrustedProxyCheck = true
-		config.TrustedProxies = []string{"127.0.0.1"}
+		config.TrustedProxies = envConfig.trustedProxies
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
 
@@ -59,24 +59,30 @@ func main() {
 }
 
 type EnvConfig struct {
-	domain string
-	port   string
+	domain         string
+	port           string
+	trustedProxies []string
 }
 
 func getEnvConfig() EnvConfig {
 
 	config := EnvConfig{
-		domain: "privtracker.com",
-		port:   "1337",
+		domain:         "privtracker.com",
+		port:           "1337",
+		trustedProxies: []string{"127.0.0.1"},
 	}
 
 	port := os.Getenv("PORT")
 	domain := os.Getenv("DOMAIN")
+	trustedProxies := os.Getenv("TRUSTED_PROXIES")
 	if domain != "" {
 		config.domain = domain
 	}
 	if port != "" {
 		config.port = port
+	}
+	if trustedProxies != "" {
+		config.trustedProxies = strings.Split(trustedProxies, ",")
 	}
 
 	return config
