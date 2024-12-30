@@ -32,7 +32,7 @@ func main() {
 	// if you disable TLS, then I guess you want to use existing proxy
 	if !tlsEnabled {
 		config.EnableTrustedProxyCheck = true
-		config.TrustedProxies = []string{"127.0.0.1"}
+		config.TrustedProxies = []string{"127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
 
