@@ -1,26 +1,19 @@
 # build app
-FROM golang:1.20-alpine3.18 AS builder
+FROM golang:1-alpine AS builder
 
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . ./
-RUN go build -ldflags="-s -w" -trimpath -o bin/privtracker
+COPY *.go ./
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath
 
 # build runner
-FROM alpine:latest
+FROM scratch
 
-ENV HOME="/config" \
-    XDG_CONFIG_HOME="/config" \
-    XDG_DATA_HOME="/config"
-
-WORKDIR /app
-
-VOLUME [ "/config" ]
-
-COPY --from=builder /src/bin/privtracker /usr/local/bin/
+COPY --from=builder /src/privtracker /
+COPY docs /docs
 
 EXPOSE 1337
 
-ENTRYPOINT [ "/usr/local/bin/privtracker" ]
+ENTRYPOINT ["/privtracker"]

@@ -64,11 +64,11 @@ services:
         user: 1000:1000
         environment:
             - TZ=${TZ}
-            - PORT=443
+            - PORT=1337
         volumes:
             - config:/config
         ports:
-            - 443:443
+            - 1337:1337
 
 volumes:
     config:
