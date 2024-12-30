@@ -11,8 +11,8 @@ RUN CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath
 # build runner
 FROM scratch
 
-COPY --from=builder /src/privtracker /
 COPY docs /docs
+COPY --from=builder /src/privtracker /
 
 EXPOSE 1337
 

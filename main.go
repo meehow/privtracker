@@ -26,8 +26,9 @@ func main() {
 	config := fiber.Config{
 		ServerHeader: "privtracker.com",
 		ReadTimeout:  time.Second * 245,
-		WriteTimeout: time.Second * 15,
+		WriteTimeout: time.Second * 30,
 		Network:      fiber.NetworkTCP,
+		GETOnly:      true,
 	}
 	// if you disable TLS, then I guess you want to use existing proxy
 	if !tlsEnabled {

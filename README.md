@@ -1,7 +1,7 @@
 # [Private BitTorrent tracker for everyone](https://privtracker.com/)
 
-PrivTracker allows to share torrent files just with your friends, nobody else.
-Unlike public trackers, it shares peers only within a group which is using the same Announce URL.
+PrivTracker allows you to share torrent files only with your friends and nobody else.
+Unlike public trackers, it shares peers only within a group using the same announce URL.
 It really works like a private tracker, but can be generated with one click of a button.
 
 ---

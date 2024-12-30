@@ -55,7 +55,7 @@ func announce(c *fiber.Ctx) error {
 	if numSeeders == 0 {
 		interval /= 2
 	} else if numLeechers == 0 {
-		interval *= 2
+		interval *= 4
 	}
 	resp := AnnounceResponse{
 		Interval:   interval,
@@ -64,6 +64,5 @@ func announce(c *fiber.Ctx) error {
 		Peers:      peersIPv4,
 		PeersIPv6:  peersIPv6,
 	}
-	defer c.Response().SetConnectionClose()
 	return bencode.Marshal(c, resp)
 }
