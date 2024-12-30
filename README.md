@@ -7,24 +7,17 @@ It really works like a private tracker, but can be generated with one click of a
 ---
 ### Build & install
 ```bash
-# Clone this repository.
-$ git clone https://github.com/meehow/privtracker.git
-
-# cd into the directory
-$ cd privtracker
-
-# Run go build
-$ go build
+$ go install github.com/meehow/privtracker@latest
 ```
 ### Usage
 ```bash
 # Runs on port 1337 by default.
-$ ./privtracker
+$ ~/go/bin/privtracker
 ```
 
 ```bash
 # Set PORT to 443 if you want to enable automatic TLS handling
-$ PORT=443 ./privtracker
+$ PORT=443 ~/go/bin/privtracker
 ```
 
 ### Example Systemd service
