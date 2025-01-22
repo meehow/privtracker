@@ -4,11 +4,20 @@ PrivTracker allows you to share torrent files only with your friends and nobody 
 Unlike public trackers, it shares peers only within a group using the same announce URL.
 It really works like a private tracker, but can be generated with one click of a button.
 
----
+## The Problem PrivTracker Solves
+
+Sharing large files has always been difficult without compromising privacy or simplicity.
+Centralized services require full uploads before sharing, often with account registration and fees for large files.
+Hosting a file server demands technical knowledge, like opening firewall ports, and requires your computer to stay online.
+PrivTracker solves this by enabling private torrent sharing within a trusted group.
+Using UPnP, most torrent clients can automatically handle port opening, and only one person in the group needs an open port for everyone to download.
+Unlike public trackers, PrivTracker shares peers' IPs only within the group and keeps files off public networks like DHT, ensuring privacy and efficient sharing.
+
 ### Build & install
 ```bash
 $ go install github.com/meehow/privtracker@latest
 ```
+
 ### Usage
 ```bash
 # Runs on port 1337 by default.
@@ -26,7 +35,7 @@ This is an example of `/etc/systemd/system/privtracker.service` which can handle
 
 Remember to check directory names if you are going to use it.
 
-```toml
+```ini
 [Unit]
 Description=privtracker
 After=network.target
@@ -49,20 +58,19 @@ WantedBy=multi-user.target
 ### Docker Compose
 
 ```yaml
-version: "3"
 services:
     privtracker:
-        build: https://github.com/meehow/privtracker.git
+        image: meehow/privtracker
         restart: unless-stopped
         user: 1000:1000
         environment:
-            - TZ=${TZ}
             - PORT=1337
+        # volume is only needed if we listed on port 443
         volumes:
-            - config:/config
+            - autocert:/.cache/golang-autocert
         ports:
             - 1337:1337
 
 volumes:
-    config:
+    autocert:
 ```

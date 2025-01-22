@@ -24,7 +24,8 @@ func main() {
 		port = "1337"
 	}
 	config := fiber.Config{
-		ServerHeader: "privtracker.com",
+		AppName:      "PrivTracker.com",
+		ServerHeader: "PrivTracker.com",
 		ReadTimeout:  time.Second * 245,
 		WriteTimeout: time.Second * 30,
 		Network:      fiber.NetworkTCP,
