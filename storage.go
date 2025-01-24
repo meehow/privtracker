@@ -24,16 +24,21 @@ func (peer Peer) String() string {
 	return fmt.Sprintf("%s:%d", net.IP(peer[:16]), binary.BigEndian.Uint16(peer[16:]))
 }
 
-// type serializedPeer [18]byte
-
 type shard struct {
-	swarms map[Hash]swarm
+	swarms map[Hash]Swarm
 	sync.RWMutex
 }
 
-type swarm struct {
+type Swarm struct {
 	seeders  map[Peer]int64
 	leechers map[Peer]int64
+}
+
+func NewSwarm() Swarm {
+	return Swarm{
+		seeders:  make(map[Peer]int64),
+		leechers: make(map[Peer]int64),
+	}
 }
 
 var shards = NewShards(512)
@@ -47,29 +52,18 @@ func NewShards(size int) []*shard {
 	shards := make([]*shard, size)
 	for i := 0; i < size; i++ {
 		shards[i] = &shard{
-			swarms: make(map[Hash]swarm),
+			swarms: make(map[Hash]Swarm),
 		}
 	}
 	return shards
 }
-
-// func serialize(ip net.IP, port uint16) serializedPeer {
-// 	var sp serializedPeer
-// 	copy(sp[:], ip)
-// 	sp[16] = byte(port >> 8)
-// 	sp[17] = byte(port)
-// 	return sp
-// }
 
 func PutPeer(room, infoHash string, peer Peer, seeding bool) {
 	h := sha1.Sum([]byte(room + infoHash))
 	shard := shards[shardIndex(h)]
 	shard.Lock()
 	if _, ok := shard.swarms[h]; !ok {
-		shard.swarms[h] = swarm{
-			seeders:  make(map[Peer]int64),
-			leechers: make(map[Peer]int64),
-		}
+		shard.swarms[h] = NewSwarm()
 	}
 	if seeding {
 		shard.swarms[h].seeders[peer] = time.Now().Unix()
@@ -96,10 +90,7 @@ func GraduateLeecher(room, infoHash string, peer Peer) {
 	shard := shards[shardIndex(h)]
 	shard.Lock()
 	if _, ok := shard.swarms[h]; !ok {
-		shard.swarms[h] = swarm{
-			seeders:  make(map[Peer]int64),
-			leechers: make(map[Peer]int64),
-		}
+		shard.swarms[h] = NewSwarm()
 	}
 	shard.swarms[h].seeders[peer] = time.Now().Unix()
 	delete(shard.swarms[h].leechers, peer)

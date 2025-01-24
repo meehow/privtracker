@@ -3,7 +3,7 @@ module github.com/meehow/privtracker
 go 1.21.4
 
 require (
-	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/jackpal/bencode-go v1.0.2
 	golang.org/x/crypto v0.32.0
 )
