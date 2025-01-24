@@ -24,8 +24,8 @@ func main() {
 		port = "1337"
 	}
 	config := fiber.Config{
-		AppName:      "PrivTracker.com",
-		ServerHeader: "PrivTracker.com",
+		AppName:      "PrivTracker",
+		ServerHeader: "PrivTracker",
 		ReadTimeout:  time.Second * 245,
 		WriteTimeout: time.Second * 30,
 		Network:      fiber.NetworkTCP,
@@ -38,7 +38,7 @@ func main() {
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
 
-	go Cleanup()
+	go Cleanup(time.Second * 600)
 
 	app := fiber.New(config)
 	app.Use(recover.New())

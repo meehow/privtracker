@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackpal/bencode-go"
 )
@@ -38,19 +40,24 @@ func announce(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	req.IP = c.IP()
+	room := c.Params("room")
+	ip := net.ParseIP(c.IP())
+	if ip == nil {
+		ip = c.Context().RemoteIP()
+	}
 	if req.Numwant == 0 {
 		req.Numwant = 30
 	}
+	peer := NewPeer(ip, req.Port)
 	switch req.Event {
 	case "stopped":
-		DeletePeer(c.Params("room"), req.InfoHash, req.IP, req.Port)
+		DeletePeer(room, req.InfoHash, peer)
 	case "completed":
-		GraduateLeecher(c.Params("room"), req.InfoHash, req.IP, req.Port)
+		GraduateLeecher(room, req.InfoHash, peer)
 	default:
-		PutPeer(c.Params("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding())
+		PutPeer(room, req.InfoHash, peer, req.IsSeeding())
 	}
-	peersIPv4, peersIPv6, numSeeders, numLeechers := GetPeers(c.Params("room"), req.InfoHash, req.IP, req.Port, req.IsSeeding(), req.Numwant)
+	peersIPv4, peersIPv6, numSeeders, numLeechers := GetPeers(room, req.InfoHash, peer, req.IsSeeding(), req.Numwant)
 	interval := 120
 	if numSeeders == 0 {
 		interval /= 2

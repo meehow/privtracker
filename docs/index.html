@@ -4,30 +4,32 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-	<link rel="canonical" href="https://privtracker.com/" />
+	<link rel="stylesheet" href="water.css">
+	<link rel="canonical" href="https://privtracker.com/">
 	<title>PrivTracker - Private BitTorrent tracker for everyone</title>
 	<script>
 		document.addEventListener("DOMContentLoaded", () => {
 			document.querySelectorAll(".url").forEach(url => {
-				url.innerText = url.innerText.replace('{{hostname}}', window.location.host);
+				url.innerText = url.innerText.replace('{{origin}}', window.location.origin);
 			})
 		})
-		function makeRoom(length) {
-			let roomID = '';
-			const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-			const charactersLength = characters.length;
-			for (let i = 0; i < length; i++) {
-				roomID += characters.charAt(Math.floor(Math.random() * charactersLength));
-			}
+		function makeRoom() {
+			const randomValues = new Uint8Array(16);
+			crypto.getRandomValues(randomValues);
+			const roomID = Array.from(randomValues).map(byte => byte.toString(16).padStart(2, '0')).join('');
+
 			document.querySelectorAll(".url").forEach(url => {
 				url.innerText = url.innerText.replace('{{room}}', roomID);
-			})
+			});
 
 			document.querySelector('#hidden').style.display = 'block';
 		}
 		function copyToClipboard() {
-			navigator.clipboard.writeText(document.querySelector('.url').innerText);
+			if (navigator.clipboard) {
+				navigator.clipboard.writeText(document.querySelector('.url').innerText);
+			} else {
+				window.alert('"Copy to clipboard" works only on https websites.');
+			}
 		}
 	</script>
 </head>
@@ -45,33 +47,21 @@
 			It really works like a private tracker, but can be generated with one click of a button.
 		</p>
 
-		<button onclick="makeRoom(32)">I'm in. Generate private tracker for me</button>
+		<button onclick="makeRoom()">I'm in. Generate private tracker for me</button>
 
 		<div id="hidden" style="display:none">
 			<h3>Your announce URL:</h3>
-			<code class="url">https://{{hostname}}/{{room}}/announce</code>
+			<code class="url">{{origin}}/{{room}}/announce</code>
 			<button onclick="copyToClipboard()">Copy to clipboard</button>
 			<p>(You can also use any random string as the Room ID. We don't store it anywhere.)</p>
 		</div>
-		<div>
-
-		<h2>The Problem PrivTracker Solves</h2>
-		<div>
-			Sharing large files has always been difficult without compromising privacy or simplicity.
-			Centralized services require full uploads before sharing, often with account registration and fees for large files.
-			Hosting a file server demands technical knowledge, like opening firewall ports, and requires your computer to stay online.
-			PrivTracker solves this by enabling private torrent sharing within a trusted group.
-			Using UPnP, most torrent clients can automatically handle port opening, and only one person in the group needs an open port for everyone to download.
-			Unlike public trackers, PrivTracker shares peers' IPs only within the group and keeps files off public networks like DHT, ensuring privacy and efficient sharing.
-		</div>
-
-		</div>
+		
 		<h2>How to create private torrent?</h2>
 		<h3>Using <a href="https://transmissionbt.com/" target="_blank">transmission</a> on Linux:</h3>
 		<ul>
 			<li>File <b>&rarr;</b> New&hellip;</li>
 			<li>Select file to share</li>
-			<li>In <b>Trackers</b> field enter <code class="url">https://{{hostname}}/{{room}}/announce</code></li>
+			<li>In <b>Trackers</b> field enter <code class="url">{{origin}}/{{room}}/announce</code></li>
 			<li>Select <b>Private torrent</b></li>
 			<li>Click <b>New</b></li>
 			<li>Click <b>Add</b> in next window</li>
@@ -84,7 +74,7 @@
 			<li>File <b>&rarr;</b> Create Torrent File&hellip;</li>
 			<li>Select file to share</li>
 			<li>Click <b>&plus;</b> under <b>Trackers</b> field and enter <code
-					class="url">https://{{hostname}}/{{room}}/announce</code></li>
+					class="url">{{origin}}/{{room}}/announce</code></li>
 			<li>Select <b>Private</b>
 			<li>Select <b>Open when created</b></li>
 			<li>Click <b>Create</b></li>
@@ -93,6 +83,19 @@
 		</ul>
 		<img src="new_torrent_mac.png" alt="New Torrent screenshot">
 
+		<h2>The Problem PrivTracker solves</h2>
+		<p>
+			Sharing large files has always been difficult without compromising privacy or simplicity.
+			Centralized services require full uploads before sharing, often with account registration and fees for
+			large files.
+			Hosting a file server demands technical knowledge, like opening firewall ports, and requires your
+			computer to stay online.
+			PrivTracker solves this by enabling private torrent sharing within a trusted group.
+			Using UPnP, most torrent clients can automatically handle port opening, and only one person in the group
+			needs an open port for everyone to download.
+			Unlike public trackers, PrivTracker shares peers' IPs only within the group and keeps files off public
+			networks like DHT, ensuring privacy and efficient sharing.
+		</p>
 	</div>
 </body>
 
