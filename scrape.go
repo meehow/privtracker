@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha1"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackpal/bencode-go"
 )
@@ -25,7 +27,8 @@ func scrape(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	numSeeders, numLeechers := GetStats(c.Params("room"), req.InfoHash)
+	swarmHash := sha1.Sum([]byte(c.Params("room") + req.InfoHash))
+	numSeeders, numLeechers := GetStats(swarmHash)
 	resp := ScrapeResponse{
 		Files: map[string]Stat{
 			req.InfoHash: {

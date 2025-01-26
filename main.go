@@ -16,20 +16,21 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-var port = os.Getenv("PORT")
-
 func main() {
+	port := os.Getenv("PORT")
 	tlsEnabled := port == "443"
 	if port == "" {
 		port = "1337"
 	}
 	config := fiber.Config{
-		AppName:      "PrivTracker",
-		ServerHeader: "PrivTracker",
-		ReadTimeout:  time.Second * 245,
-		WriteTimeout: time.Second * 30,
-		Network:      fiber.NetworkTCP,
-		GETOnly:      true,
+		AppName:          "PrivTracker",
+		ServerHeader:     "PrivTracker",
+		ReadTimeout:      time.Second * 245,
+		WriteTimeout:     time.Second * 30,
+		Network:          fiber.NetworkTCP,
+		GETOnly:          true,
+		DisableKeepalive: true,
+		Immutable:        true,
 	}
 	// if you disable TLS, then I guess you want to use existing proxy
 	if !tlsEnabled {
@@ -38,7 +39,7 @@ func main() {
 		config.ProxyHeader = fiber.HeaderXForwardedFor
 	}
 
-	go Cleanup(time.Second * 600)
+	go Cleanup(time.Minute * 16)
 
 	app := fiber.New(config)
 	app.Use(recover.New())

@@ -3,3 +3,6 @@ build:
 
 deploy: build
 	rsync -avzL --exclude '*.fiber.gz' docs privtracker privtracker:web/
+
+test:
+	go test -bench . -benchmem
