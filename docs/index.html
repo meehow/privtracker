@@ -32,6 +32,39 @@
 			}
 		}
 	</script>
+	<style>
+		.image-container {
+			position: relative;
+			display: inline-block;
+		}
+
+		.image-container img {
+			display: block;
+		}
+
+		.image-container .url {
+			position: absolute;
+			top: 148px;
+			left: 144px;
+			color: #1a1a1a;
+			background-color: white;
+			font-size: 13px;
+		}
+
+		.image-container .url.gtk {
+			top: 286px;
+			left: 219px;
+			width: 400px;
+			font-family: Ubuntu, Helvetica, Arial, san-serif;
+		}
+
+		.image-container .url.mac {
+			top: 148px;
+			left: 144px;
+			width: 575px;
+			font-family: 'San Francisco', Helvetica, Arial, san-serif;
+		}
+	</style>
 </head>
 
 <body>
@@ -55,7 +88,7 @@
 			<button onclick="copyToClipboard()">Copy to clipboard</button>
 			<p>(You can also use any random string as the Room ID. We don't store it anywhere.)</p>
 		</div>
-		
+
 		<h2>How to create private torrent?</h2>
 		<h3>Using <a href="https://transmissionbt.com/" target="_blank">transmission</a> on Linux:</h3>
 		<ul>
@@ -68,7 +101,10 @@
 			<li>Click <b>Open</b> to start seeding</li>
 			<li>Done. Now you can send torrent file to your friends&hellip;</li>
 		</ul>
-		<img src="new_torrent_gtk.png" alt="New Torrent screenshot">
+		<div class="image-container">
+			<img src="new_torrent_gtk.png" alt="New Torrent screenshot">
+			<div class="url gtk">{{origin}}/{{room}}/announce</div>
+		</div>
 		<h3>Using <a href="https://transmissionbt.com/" target="_blank">transmission</a> on Mac:</h3>
 		<ul>
 			<li>File <b>&rarr;</b> Create Torrent File&hellip;</li>
@@ -81,7 +117,10 @@
 			<li>Click <b>Add</b> to start seeding</li>
 			<li>Done. Now you can send torrent file to your friends&hellip;</li>
 		</ul>
-		<img src="new_torrent_mac.png" alt="New Torrent screenshot">
+		<div class="image-container">
+			<img src="new_torrent_mac.png" alt="New Torrent screenshot">
+			<div class="url mac">{{origin}}/{{room}}/announce</div>
+		</div>
 
 		<h2>The Problem PrivTracker solves</h2>
 		<p>
