@@ -5,62 +5,35 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"golang.org/x/crypto/acme/autocert"
 )
 
 func main() {
 	port := os.Getenv("PORT")
-	tlsEnabled := port == "443"
 	if port == "" {
 		port = "1337"
 	}
-	config := fiber.Config{
-		AppName:          "PrivTracker",
-		ServerHeader:     "PrivTracker",
-		ReadTimeout:      time.Second * 245,
-		WriteTimeout:     time.Second * 30,
-		Network:          fiber.NetworkTCP,
-		GETOnly:          true,
-		DisableKeepalive: true,
-		Immutable:        true,
-	}
-	// if you disable TLS, then I guess you want to use existing proxy
-	if !tlsEnabled {
-		config.EnableTrustedProxyCheck = true
-		config.TrustedProxies = []string{"127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
-		config.ProxyHeader = fiber.HeaderXForwardedFor
-	}
-
-	go Cleanup(time.Minute * 16)
-
-	app := fiber.New(config)
-	app.Use(recover.New())
-	// app.Use(pprof.New())
-	app.Use(myLogger())
-	app.Use(hsts)
-	app.Static("/", "docs", fiber.Static{
-		MaxAge:        3600 * 24 * 7,
-		Compress:      true,
-		CacheDuration: time.Hour,
-	})
-	app.Get("/dashboard", monitor.New())
-	app.Get("/:room/announce", announce)
-	app.Get("/:room/scrape", scrape)
-	app.Server().LogAllErrors = true
-	if tlsEnabled {
-		go redirect80(config)
-		log.Fatal(app.Listener(autocertListener()))
+	handler := router(recoveryMiddleware, headersMiddleware, logRequestMiddleware)
+	if port == "443" {
+		go redirect80()
+		fmt.Println("PrivTracker listening on https://0.0.0.0/")
+		log.Fatal(http.Serve(autocertListener(), handler))
 	} else {
-		log.Fatal(app.Listen(":" + port))
+		fmt.Printf("PrivTracker listening on http://0.0.0.0:%s/\n", port)
+		log.Fatal(http.ListenAndServe(":"+port, handler))
 	}
+}
+
+func router(middlewares ...Middleware) http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir("docs")))
+	mux.HandleFunc("GET /{room}/announce", announce)
+	mux.HandleFunc("GET /{room}/scrape", scrape)
+	return chainMiddleware(mux, middlewares...)
 }
 
 func autocertListener() net.Listener {
@@ -75,33 +48,21 @@ func autocertListener() net.Listener {
 	}
 	cfg := &tls.Config{
 		GetCertificate: m.GetCertificate,
-		NextProtos: []string{
-			"http/1.1", "acme-tls/1",
-		},
+		NextProtos:     []string{"h2", "http/1.1", "acme-tls/1"},
 	}
-	ln, err := tls.Listen("tcp", ":443", cfg)
+	listener, err := tls.Listen("tcp", ":443", cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return ln
+	return listener
 }
 
-func redirect80(config fiber.Config) {
-	config.DisableStartupMessage = true
-	app := fiber.New(config)
-	app.Use(func(c *fiber.Ctx) error {
-		return c.Redirect(fmt.Sprintf("https://%s/", c.Hostname()), fiber.StatusMovedPermanently)
-	})
-	log.Print(app.Listen(":80"))
-}
-
-func myLogger() fiber.Handler {
-	loggerConfig := logger.ConfigDefault
-	loggerConfig.Format = "${status} - ${latency} ${ip} ${method} ${path} ${bytesSent} - ${referer} - ${ua}\n"
-	return logger.New(loggerConfig)
-}
-
-func hsts(c *fiber.Ctx) error {
-	c.Set("Strict-Transport-Security", "max-age=31536000")
-	return c.Next()
+func redirect80() {
+	err := http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		url := fmt.Sprintf("https://%s/", r.Host)
+		http.Redirect(w, r, url, http.StatusMovedPermanently)
+	}))
+	if err != nil {
+		fmt.Println(err)
+	}
 }

@@ -2,31 +2,15 @@ package main
 
 import (
 	"crypto/sha1"
+	"fmt"
 	"net"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/jackpal/bencode-go"
 )
-
-type AnnounceRequest struct {
-	InfoHash      string `query:"info_hash"`
-	PeerID        string `query:"peer_id"`
-	IP            string `query:"ip"`
-	Port          uint16 `query:"port"`
-	Uploaded      uint   `query:"uploaded"`
-	Downloaded    uint   `query:"downloaded"`
-	Left          uint   `query:"left"`
-	Numwant       uint   `query:"numwant"`
-	Key           string `query:"key"`
-	Compact       bool   `query:"compact"`
-	SupportCrypto bool   `query:"supportcrypto"`
-	Event         string `query:"event"`
-}
-
-func (req *AnnounceRequest) IsSeeding() bool {
-	return req.Left == 0
-}
 
 type AnnounceResponse struct {
 	Interval   int    `bencode:"interval"`
@@ -36,38 +20,44 @@ type AnnounceResponse struct {
 	PeersIPv6  []byte `bencode:"peers_ipv6"`
 }
 
-func announce(c *fiber.Ctx) error {
-	var req AnnounceRequest
-	err := c.QueryParser(&req)
+func announce(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	port, err := strconv.Atoi(query.Get("port"))
 	if err != nil {
-		return err
+		http.Error(w, "port missing", 400)
+		return
 	}
-	ip := net.ParseIP(c.IP())
+	ip := getRemoteIP(r)
 	if ip == nil {
-		ip = c.Context().RemoteIP()
+		http.Error(w, "can't parse IP", 400)
+		return
 	}
-	if req.Numwant < 1 {
-		req.Numwant = 30
+	numwant, err := strconv.Atoi(query.Get("numwant"))
+	if err != nil || numwant < 1 {
+		numwant = 30
 	}
-	swarmHash := sha1.Sum([]byte(c.Params("room") + req.InfoHash))
-	peer := NewPeer(ip, req.Port)
-	switch req.Event {
+	swarmHash := sha1.Sum([]byte(r.PathValue("room") + query.Get("info_hash")))
+	peer := NewPeer(ip, uint16(port))
+	isSeeding := query.Get("left") == "0"
+	switch query.Get("event") {
 	case "stopped":
 		DeletePeer(swarmHash, peer)
 	case "completed":
 		GraduateLeecher(swarmHash, peer)
 	default:
-		PutPeer(swarmHash, peer, req.IsSeeding())
+		PutPeer(swarmHash, peer, isSeeding)
 	}
-	peersIPv4, peersIPv6, numSeeders, numLeechers := GetPeers(swarmHash, peer, req.IsSeeding(), req.Numwant)
-	interval := int(time.Now().Unix()+int64(swarmHash[0]))%256 + 60
+	peersIPv4, peersIPv6, numSeeders, numLeechers := GetPeers(swarmHash, peer, isSeeding, numwant)
+	interval := 480 // must be smaller than cleanup interval
 	switch {
-	// case numSeeders == 0:
-	// 	interval -= 30
-	case numLeechers == 0:
-		interval += 240
-	case numSeeders+numLeechers > 10:
-		interval += 480
+	case numSeeders+numLeechers < 10:
+		// try to synchronize peer requests. Maybe it will help µTP with UDP port punching... not sure
+		interval = 240 - int(time.Now().Unix()+int64(swarmHash[0]))%240
+		if interval < 60 {
+			interval += 240
+		}
+	case numSeeders+numLeechers > 30:
+		interval = 900
 	}
 	resp := AnnounceResponse{
 		Interval:   interval,
@@ -76,5 +66,27 @@ func announce(c *fiber.Ctx) error {
 		Peers:      peersIPv4,
 		PeersIPv6:  peersIPv6,
 	}
-	return bencode.Marshal(c, resp)
+	w.Header().Add("X-PrivTracker", fmt.Sprintf("s:%d l:%d", numSeeders, numLeechers))
+	if err := bencode.Marshal(w, resp); err != nil {
+		http.Error(w, err.Error(), 400)
+	}
+}
+
+func getRemoteIP(r *http.Request) net.IP {
+	addr := r.RemoteAddr
+	if colonIndex := strings.LastIndex(addr, ":"); colonIndex != -1 {
+		addr = addr[:colonIndex]
+	}
+	addr = strings.Trim(addr, "[]")
+	ip := net.ParseIP(addr)
+	if ip.IsPrivate() {
+		ips := strings.Split(r.Header.Get("X-Forwarded-For"), ",")
+		if len(ips) > 0 {
+			ipForwarded := net.ParseIP(strings.TrimSpace(ips[0]))
+			if ipForwarded != nil {
+				ip = ipForwarded
+			}
+		}
+	}
+	return ip
 }
