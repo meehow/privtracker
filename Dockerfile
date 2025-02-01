@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY *.go ./
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -buildid=" -trimpath
 
 # build runner
 FROM scratch
