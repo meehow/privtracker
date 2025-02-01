@@ -31,7 +31,7 @@ func logRequestMiddleware(next http.Handler) http.Handler {
 		wrapper := &ResponseWriterWrapper{ResponseWriter: w, StatusCode: http.StatusOK}
 		timer := time.Now()
 		next.ServeHTTP(wrapper, r)
-		fmt.Printf("%d - %5dµs %47s %4s %42s %6d %11s - %s - %s\n",
+		fmt.Printf("%d - %5dµs %21s %4s %42s %6d %11s - %s - %s\n",
 			wrapper.StatusCode, time.Since(timer).Microseconds(), r.RemoteAddr,
 			r.Method, r.URL.Path, wrapper.BytesSent,
 			wrapper.Header().Get("X-PrivTracker"), r.Referer(), r.UserAgent())

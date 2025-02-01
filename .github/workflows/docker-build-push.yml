@@ -3,7 +3,7 @@ name: Docker Build & Push (Tags Only)
 on:
   push:
     tags:
-      - 'v*'  # triggers for version tag pushed
+      - '[0-9]*'  # triggers for version tag pushed
 
 jobs:
   build-and-push:

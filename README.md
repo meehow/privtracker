@@ -13,17 +13,21 @@ PrivTracker solves this by enabling private torrent sharing within a trusted gro
 Using UPnP, most torrent clients can automatically handle port opening, and only one person in the group needs an open port for everyone to download.
 Unlike public trackers, PrivTracker shares peers' IPs only within the group and keeps files off public networks like DHT, ensuring privacy and efficient sharing.
 
-### Build & install
+### Build
 ```bash
-go install github.com/meehow/privtracker@latest
+git clone https://github.com/meehow/privtracker.git
+cd privtracker
+make build
 ```
+
+You can also download pre-built binaries for your system from the [Releases page](https://github.com/meehow/privtracker/releases).
 
 ### Run PrivTracker without TLS
 
 By default, PrivTracker will use port 1337.
 
 ```bash
-~/go/bin/privtracker
+./privtracker
 ```
 
 ### Run PrivTracker with automatic TLS / HTTPS
@@ -32,8 +36,8 @@ If you change the port to 443, PrivTracker will enable automatic TLS handling us
 Port 443 must be accessible from the internet, and you must have a domain name pointing to your server.
 
 ```bash
-sudo setcap cap_net_bind_service=+ep ~/go/bin/privtracker # allow binding to ports below 1024
-PORT=443 ~/go/bin/privtracker
+sudo setcap cap_net_bind_service=+ep privtracker # allow binding to ports below 1024
+PORT=443 ./privtracker
 ```
 
 ### Example Systemd service
