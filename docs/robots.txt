@@ -1,1 +1,3 @@
-oh yeah, please scape me
+User-Agent: *
+Disallow: /*/announce$
+Disallow: /*/scrape$
