@@ -15,25 +15,32 @@ Unlike public trackers, PrivTracker shares peers' IPs only within the group and 
 
 ### Build & install
 ```bash
-$ go install github.com/meehow/privtracker@latest
+go install github.com/meehow/privtracker@latest
 ```
 
-### Usage
-```bash
-# Runs on port 1337 by default.
-$ ~/go/bin/privtracker
-```
+### Run PrivTracker without TLS
+
+By default, PrivTracker will use port 1337.
 
 ```bash
-# Set PORT to 443 if you want to enable automatic TLS handling
-$ PORT=443 ~/go/bin/privtracker
+~/go/bin/privtracker
+```
+
+### Run PrivTracker with automatic TLS / HTTPS
+
+If you change the port to 443, PrivTracker will enable automatic TLS handling using [Let's Encrypt](https://letsencrypt.org/) to acquire a certificate.
+Port 443 must be accessible from the internet, and you must have a domain name pointing to your server.
+
+```bash
+sudo setcap cap_net_bind_service=+ep ~/go/bin/privtracker # allow binding to ports below 1024
+PORT=443 ~/go/bin/privtracker
 ```
 
 ### Example Systemd service
 
-This is an example of `/etc/systemd/system/privtracker.service` which can handle your privtracker service.
+Below is an example of `/etc/systemd/system/privtracker.service`, which can be used to manage your PrivTracker service.
 
-Remember to check directory names if you are going to use it.
+Ensure the directory paths are correct before using this configuration.
 
 ```ini
 [Unit]
@@ -55,7 +62,7 @@ ExecStart=/home/privtracker/web/privtracker
 WantedBy=multi-user.target
 ```
 
-### Docker Compose
+### Example Docker Compose
 
 ```yaml
 services:
