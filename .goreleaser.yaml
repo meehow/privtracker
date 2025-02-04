@@ -25,6 +25,8 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
+    flags: -trimpath
+    ldflags: -s -w -buildid=
 
 archives:
   - formats: tar.gz
@@ -50,4 +52,4 @@ changelog:
   filters:
     exclude:
       - "^docs:"
-      - "^test:"
+      - "_test:"
