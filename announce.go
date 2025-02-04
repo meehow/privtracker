@@ -22,7 +22,7 @@ type AnnounceResponse struct {
 
 func announce(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	port, err := strconv.Atoi(query.Get("port"))
+	port, err := strconv.ParseUint(query.Get("port"), 10, 16)
 	if err != nil {
 		http.Error(w, "port missing", 400)
 		return
