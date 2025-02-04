@@ -57,11 +57,14 @@ func autocertListener() net.Listener {
 	return listener
 }
 
+func redirect(w http.ResponseWriter, r *http.Request) {
+	url := fmt.Sprintf("https://%s/", r.Host)
+	http.Redirect(w, r, url, http.StatusMovedPermanently)
+}
+
 func redirect80() {
-	err := http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url := fmt.Sprintf("https://%s/", r.Host)
-		http.Redirect(w, r, url, http.StatusMovedPermanently)
-	}))
+	handler := chainMiddleware(http.HandlerFunc(redirect), logRequestMiddleware)
+	err := http.ListenAndServe(":80", handler)
 	if err != nil {
 		fmt.Println(err)
 	}
